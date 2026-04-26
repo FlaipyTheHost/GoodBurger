@@ -1,0 +1,50 @@
+@using GoodBurger.Blazor.Services
+@using GoodBurger.Blazor.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@implements IDisposable
+
+<nav class="orange darken-2">
+    <div class="nav-wrapper container">
+        <a href="/" class="brand-logo">
+            <i class="material-icons">restaurant</i>Good Burger
+        </a>
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+            <AuthorizeView>
+                <Authorized>
+                    <li><a href="/new-order"><i class="material-icons left">add_shopping_cart</i>New Order</a></li>
+                    <li><a href="/orders"><i class="material-icons left">receipt_long</i>Orders</a></li>
+                    <li><a @onclick="HandleLogout" style="cursor: pointer;"><i class="material-icons left">logout</i>Logout</a></li>
+                </Authorized>
+                <NotAuthorized>
+                    <li><a href="/login"><i class="material-icons left">login</i>Login</a></li>
+                </NotAuthorized>
+            </AuthorizeView>
+        </ul>
+    </div>
+</nav>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AuthStateProvider.AuthenticationStateChanged += OnAuthStateChanged;
+    }
+
+    private void OnAuthStateChanged(Task<AuthenticationState> task)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        AuthStateProvider.AuthenticationStateChanged -= OnAuthStateChanged;
+    }
+}

@@ -1,0 +1,95 @@
+﻿@page "/"
+@using GoodBurger.Blazor.Services
+@inject AuthService AuthService
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>Home - Good Burger</PageTitle>
+
+<AuthorizeView>
+    <NotAuthorized>
+        <div class="container" style="margin-top: 30px;">
+            <div class="row">
+                <div class="col s12">
+                    <div class="card orange darken-2">
+                        <div class="card-content white-text center-align">
+                            <i class="material-icons medium">info</i>
+                            <h5>Welcome! Please login to start ordering</h5>
+                            <p>You need to authenticate to access the order system.</p>
+                        </div>
+                        <div class="card-action center-align">
+                            <a href="/login" class="btn white orange-text text-darken-2 btn-large">
+                                <i class="material-icons left">login</i>Login Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+<div class="container" style="margin-top: 50px;">
+    <div class="row">
+        <div class="col s12 center-align">
+            <i class="material-icons orange-text text-darken-2" style="font-size: 120px;">restaurant</i>
+            <h2 class="orange-text text-darken-2">Welcome to Good Burger!</h2>
+            <h5 class="grey-text text-darken-1">The best burgers in town</h5>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 50px;">
+        <div class="col s12 m6">
+            <div class="card hoverable">
+                <div class="card-content center-align">
+                    <i class="material-icons orange-text text-darken-2" style="font-size: 80px;">add_shopping_cart</i>
+                    <span class="card-title">Make an Order</span>
+                    <p>Choose your favorite sandwich, add fries and soda, and enjoy our special discounts!</p>
+                </div>
+                <div class="card-action center-align">
+                    <a href="/new-order" class="btn waves-effect waves-light orange darken-2 btn-large">
+                        <i class="material-icons left">fastfood</i>Order Now
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col s12 m6">
+            <div class="card hoverable">
+                <div class="card-content center-align">
+                    <i class="material-icons orange-text text-darken-2" style="font-size: 80px;">receipt_long</i>
+                    <span class="card-title">View Orders</span>
+                    <p>Check all your orders, see order details and manage your purchase history.</p>
+                </div>
+                <div class="card-action center-align">
+                    <a href="/orders" class="btn waves-effect waves-light orange darken-2 btn-large">
+                        <i class="material-icons left">list</i>View Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 30px;">
+        <div class="col s12">
+            <div class="card orange darken-2">
+                <div class="card-content white-text center-align">
+                    <span class="card-title">Special Combo Discounts!</span>
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col s12 m4">
+                            <h4>20%</h4>
+                            <p>Sandwich + Fries + Soda</p>
+                        </div>
+                        <div class="col s12 m4">
+                            <h4>15%</h4>
+                            <p>Sandwich + Soda</p>
+                        </div>
+                        <div class="col s12 m4">
+                            <h4>10%</h4>
+                            <p>Sandwich + Fries</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

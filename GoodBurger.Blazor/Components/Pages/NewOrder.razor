@@ -1,0 +1,310 @@
+@page "/new-order"
+@using GoodBurger.Blazor.Models
+@using GoodBurger.Blazor.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject GoodBurgerApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>New Order - Good Burger</PageTitle>
+
+<AuthorizeView>
+    <NotAuthorized>
+        <div class="container" style="margin-top: 50px;">
+            <div class="row">
+                <div class="col s12">
+                    <div class="card-panel orange lighten-4 center-align">
+                        <i class="material-icons large orange-text text-darken-2">lock</i>
+                        <h5 class="orange-text text-darken-2">Authentication Required</h5>
+                        <p>You need to login to create orders.</p>
+                        <a href="/login" class="btn orange darken-2 btn-large">
+                            <i class="material-icons left">login</i>Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+    <Authorized>
+        <div class="container" style="margin-top: 30px;">
+            <div class="row">
+                <div class="col s12">
+                    <h4 class="orange-text text-darken-2">
+                        <i class="material-icons left">fastfood</i>
+                        Make Your Order
+                    </h4>
+                </div>
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="row">
+                    <div class="col s12 center-align">
+                        <div class="preloader-wrapper big active">
+                            <div class="spinner-layer spinner-orange-only">
+                                <div class="circle-clipper left"><div class="circle"></div></div>
+                                <div class="gap-patch"><div class="circle"></div></div>
+                                <div class="circle-clipper right"><div class="circle"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (menuItems == null || !menuItems.Any())
+            {
+                <div class="row">
+                    <div class="col s12">
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text text-darken-2">
+                                <i class="material-icons left">error</i>
+                                Error loading menu. Please try again.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    <div class="col s12 m6">
+                        <div class="card">
+                            <div class="card-content">
+                                <span class="card-title orange-text text-darken-2">Select Your Items</span>
+
+                                <div class="input-field">
+                                    <select class="browser-default" @onchange="OnSandwichChanged">
+                                        <option value="" selected disabled>Choose your sandwich</option>
+                                        @foreach (var item in sandwiches)
+                                        {
+                                            <option value="@item.Name">@item.Name - R$ @item.Price.ToString("F2")</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <p>
+                                    <label>
+                                        <input type="checkbox" @bind="hasFries" />
+                                        <span>Fries - R$ @friesPrice.ToString("F2")</span>
+                                    </label>
+                                </p>
+
+                                <p>
+                                    <label>
+                                        <input type="checkbox" @bind="hasSoda" />
+                                        <span>Soda - R$ @sodaPrice.ToString("F2")</span>
+                                    </label>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col s12 m6">
+                        <div class="card">
+                            <div class="card-content">
+                                <span class="card-title orange-text text-darken-2">Order Summary</span>
+
+                                @if (selectedSandwich != null)
+                                {
+                                    <table class="striped">
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Sandwich:</strong></td>
+                                                <td>@selectedSandwich.Name</td>
+                                                <td class="right-align">R$ @selectedSandwich.Price.ToString("F2")</td>
+                                            </tr>
+                                            @if (hasFries)
+                                            {
+                                                <tr>
+                                                    <td><strong>Fries:</strong></td>
+                                                    <td>Included</td>
+                                                    <td class="right-align">R$ @friesPrice.ToString("F2")</td>
+                                                </tr>
+                                            }
+                                            @if (hasSoda)
+                                            {
+                                                <tr>
+                                                    <td><strong>Soda:</strong></td>
+                                                    <td>Included</td>
+                                                    <td class="right-align">R$ @sodaPrice.ToString("F2")</td>
+                                                </tr>
+                                            }
+                                            <tr>
+                                                <td colspan="2"><strong>Subtotal:</strong></td>
+                                                <td class="right-align"><strong>R$ @CalculateSubtotal().ToString("F2")</strong></td>
+                                            </tr>
+                                            @if (CalculateDiscount() > 0)
+                                            {
+                                                <tr class="green-text">
+                                                    <td colspan="2"><strong>Discount (@CalculateDiscountPercent()%):</strong></td>
+                                                    <td class="right-align"><strong>- R$ @CalculateDiscount().ToString("F2")</strong></td>
+                                                </tr>
+                                            }
+                                            <tr class="orange darken-2 white-text">
+                                                <td colspan="2"><strong>TOTAL:</strong></td>
+                                                <td class="right-align"><strong>R$ @CalculateTotal().ToString("F2")</strong></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <p class="grey-text">Please select a sandwich to see the summary.</p>
+                                }
+                            </div>
+
+                            @if (selectedSandwich != null)
+                            {
+                                <div class="card-action">
+                                    <button class="btn waves-effect waves-light orange darken-2 btn-large"
+                                            @onclick="ConfirmOrder"
+                                            disabled="@isSubmitting">
+                                        @if (isSubmitting)
+                                        {
+                                            <span>Processing...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Confirm Order<i class="material-icons right">send</i></span>
+                                        }
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @if (errorMessage != null)
+                {
+                    <div class="row">
+                        <div class="col s12">
+                            <div class="card-panel red lighten-4">
+                                <span class="red-text text-darken-2">
+                                    <i class="material-icons left">error</i>@errorMessage
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (successMessage != null)
+                {
+                    <div class="row">
+                        <div class="col s12">
+                            <div class="card-panel green lighten-4">
+                                <span class="green-text text-darken-4">
+                                    <i class="material-icons left">check_circle</i>@successMessage
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private List<MenuItem>? menuItems;
+    private List<MenuItem> sandwiches = new();
+    private MenuItem? selectedSandwich;
+    private decimal friesPrice;
+    private decimal sodaPrice;
+    private bool hasFries = false;
+    private bool hasSoda = false;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            menuItems = await ApiService.GetMenuAsync();
+            if (menuItems != null)
+            {
+                sandwiches = menuItems.Where(m => m.Category == "Sandwich").ToList();
+                friesPrice = menuItems.FirstOrDefault(m => m.Name == "Fries")?.Price ?? 0;
+                sodaPrice = menuItems.FirstOrDefault(m => m.Name == "Soda")?.Price ?? 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading menu: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OnSandwichChanged(ChangeEventArgs e)
+    {
+        var sandwichName = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(sandwichName))
+        {
+            selectedSandwich = sandwiches.FirstOrDefault(s => s.Name == sandwichName);
+            errorMessage = null;
+            successMessage = null;
+        }
+    }
+
+    private decimal CalculateSubtotal()
+    {
+        var subtotal = selectedSandwich?.Price ?? 0;
+        if (hasFries) subtotal += friesPrice;
+        if (hasSoda) subtotal += sodaPrice;
+        return subtotal;
+    }
+
+    private decimal CalculateDiscountPercent()
+    {
+        if (hasFries && hasSoda) return 20m;
+        if (hasSoda) return 15m;
+        if (hasFries) return 10m;
+        return 0m;
+    }
+
+    private decimal CalculateDiscount()
+        => Math.Round(CalculateSubtotal() * CalculateDiscountPercent() / 100, 2);
+
+    private decimal CalculateTotal()
+        => CalculateSubtotal() - CalculateDiscount();
+
+    private async Task ConfirmOrder()
+    {
+        if (selectedSandwich == null) return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            int sandwichType = selectedSandwich.Name switch
+            {
+                "XBurger" => 0,
+                "XEgg"    => 1,
+                "XBacon"  => 2,
+                _         => 0
+            };
+
+            var request = new CreateOrderRequest(sandwichType, hasFries, hasSoda);
+            var result = await ApiService.CreateOrderAsync(request);
+
+            if (result != null)
+            {
+                successMessage = $"Order confirmed! Total: R$ {result.Total:F2}";
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/orders");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating order: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

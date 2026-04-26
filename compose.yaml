@@ -1,0 +1,25 @@
+﻿services:
+  api:
+    build:
+      context: .
+      dockerfile: GoodBurger.Api/Dockerfile
+    container_name: goodburger-api
+    ports:
+      - "5290:8080"
+    volumes:
+      - goodburger_db:/app
+
+  blazor:
+    build:
+      context: .
+      dockerfile: GoodBurger.Blazor/Dockerfile
+    container_name: goodburger-blazor
+    ports:
+      - "5001:8080"
+    depends_on:
+      - api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+
+volumes:
+  goodburger_db:

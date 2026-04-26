@@ -1,0 +1,119 @@
+@page "/login"
+@using GoodBurger.Blazor.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Login - Good Burger</PageTitle>
+
+<div class="container" style="margin-top: 80px;">
+    <div class="row">
+        <div class="col s12 m6 offset-m3">
+            <div class="card">
+                <div class="card-content">
+                    <div class="center-align" style="margin-bottom: 30px;">
+                        <i class="material-icons orange-text text-darken-2" style="font-size: 80px;">lock</i>
+                        <h4 class="orange-text text-darken-2">Login</h4>
+                        <p class="grey-text">Enter your credentials to access Good Burger</p>
+                    </div>
+
+                    @if (errorMessage != null)
+                    {
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text text-darken-2">
+                                <i class="material-icons left">error</i>
+                                @errorMessage
+                            </span>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix orange-text text-darken-2">account_circle</i>
+                            <input id="username" type="text" @bind="username" @bind:event="oninput" disabled="@isLoading" />
+                            <label for="username">Username</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix orange-text text-darken-2">lock</i>
+                            <input id="password" type="password" @bind="password" @bind:event="oninput"
+                                   @onkeypress="HandleKeyPress" disabled="@isLoading" />
+                            <label for="password">Password</label>
+                        </div>
+                    </div>
+
+                    <div class="card-panel blue-grey lighten-5">
+                        <p class="grey-text text-darken-1" style="margin: 5px 0;">
+                            <i class="material-icons tiny">info</i>
+                            <strong>Default credentials:</strong>
+                        </p>
+                        <p class="grey-text text-darken-1" style="margin: 5px 0 5px 20px;">
+                            Username: <strong>demo</strong><br/>
+                            Password: <strong>demo123</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-action center-align">
+                    <button class="btn waves-effect waves-light orange darken-2 btn-large"
+                            @onclick="HandleLogin"
+                            disabled="@(isLoading || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))">
+                        @if (isLoading)
+                        {
+                            <span>Logging in...</span>
+                        }
+                        else
+                        {
+                            <span>Login<i class="material-icons right">send</i></span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string username = "";
+    private string password = "";
+    private bool isLoading = false;
+    private string? errorMessage;
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var success = await AuthService.LoginAsync(username, password);
+
+            if (success)
+            {
+                // Force reload to reset all component states
+                Navigation.NavigateTo("/", forceLoad: false);
+            }
+            else
+            {
+                errorMessage = "Invalid username or password. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Login failed: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+        {
+            await HandleLogin();
+        }
+    }
+}

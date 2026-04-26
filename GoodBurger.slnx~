@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GoodBurger.Api/.csproj" />
+  <Project Path="GoodBurger.Tests/GoodBurger.Tests.csproj" />
+</Solution>
